@@ -65,8 +65,8 @@ class WebRelTreeReport(Report):
                     'fullname': _person_long_name(person),
                     'url': self._gen_url(person),
                     'icon': self._gen_icon(person),
-                    'bdate': '',
-                    'ddate': '',
+                    'bdate': self._fmt_event(person.get_birth_ref()),
+                    'ddate': self._fmt_event(person.get_death_ref()),
                     'gender': gender_map.get(person.get_gender()),
                     'childOf': [self.database.get_family_from_handle(handle).gramps_id
                                 for handle in person.get_parent_family_handle_list()],
@@ -118,6 +118,25 @@ class WebRelTreeReport(Report):
                     })
             shutil.copyfile(src_path, dst_path)
             return os.path.join('thumbs', os.path.basename(dst_path))
+
+    def _fmt_event(self, event_ref):
+        if event_ref is None:
+            return None
+        handle = event_ref.get_reference_handle()
+        if handle is None:
+            return None
+        event = self.database.get_event_from_handle(handle)
+        if event is None:
+            return None
+        date = event.get_date_object()
+        if date is None:
+            return None
+        year = date.get_year()
+        if year == 0:
+            return None
+        month = date.get_month()
+        day = date.get_day()
+        return '%0.4d-%0.2d-%0.2d' % (year, month, day)
 
 
 # ---------------------------------------------------------------------------------------
