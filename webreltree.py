@@ -14,6 +14,7 @@ _ = glocale.translation.sgettext
 from gramps.gen.config import config
 from gramps.gen.plug.report import Report
 from gramps.gen.plug.report import MenuReportOptions
+from gramps.gen.plug.report.stdoptions import add_private_data_option
 from gramps.gen.plug.menu import (StringOption, PersonOption, DestinationOption)
 from gramps.gen.lib import Person
 from gramps.gen.utils.file import media_path_full
@@ -53,25 +54,26 @@ class WebRelTreeReport(Report):
             Person.FEMALE: 'f',
         }
         # read data from database
+        incl_private = self.options.menu.get_option_by_name('incl_private').get_value()
         person_handles = self.database.get_person_handles()
         with self.user.progress(
                 _('Web Relations Tree Report'), _('Creating individual pages'),
                 len(person_handles)) as step:
             for handle in person_handles:
                 person = self.database.get_person_from_handle(handle)
+                if not incl_private and person.get_privacy():
+                    continue
                 persons.append({
                     'id': person.gramps_id,
                     'name': _person_short_name(person),
                     'fullname': _person_long_name(person),
                     'url': self._gen_url(person),
-                    'icon': self._gen_icon(person),
+                    'icon': self._gen_icon(person, incl_private),
                     'bdate': self._fmt_event(person.get_birth_ref()),
                     'ddate': self._fmt_event(person.get_death_ref()),
                     'gender': gender_map.get(person.get_gender()),
-                    'childOf': [self.database.get_family_from_handle(handle).gramps_id
-                                for handle in person.get_parent_family_handle_list()],
-                    'parentOf': [self.database.get_family_from_handle(handle).gramps_id
-                                 for handle in person.get_family_handle_list()],
+                    'childOf': self._get_families(person.get_parent_family_handle_list(), incl_private),
+                    'parentOf': self._get_families(person.get_family_handle_list(), incl_private),
                 })
                 step()
         # read family data from database
@@ -84,6 +86,14 @@ class WebRelTreeReport(Report):
                 ';\nvar startPersonId = "%s";\n' %
                 self.options.menu.get_option_by_name('person_id').get_value())
 
+    def _get_families(self, handles, incl_private):
+        result = []
+        for handle in handles:
+            family = self.database.get_family_from_handle(handle)
+            if incl_private or not family.get_privacy():
+                result.append(family.gramps_id)
+        return result
+
     def _gen_url(self, person):
         narweb_url = self.options.menu.get_option_by_name('narweb_prefix').get_value()
         if narweb_url:
@@ -91,14 +101,20 @@ class WebRelTreeReport(Report):
             path = [narweb_url, 'ppl', fname[-1].lower(), fname[-2].lower(), fname + '.html']
             return '/'.join([e.strip('/') for e in path])
 
-    def _gen_icon(self, person):
+    def _gen_icon(self, person, incl_private=True):
         media_refs = person.get_media_list()
         if len(media_refs) == 0:
             return
-        media_ref = media_refs[0]
-        region = media_ref.get_rectangle()
-        photo_handle = media_ref.get_reference_handle()
-        photo = self.database.get_object_from_handle(photo_handle)
+        photo = None
+        for media_ref in media_refs:
+            region = media_ref.get_rectangle()
+            photo_handle = media_ref.get_reference_handle()
+            photo = self.database.get_object_from_handle(photo_handle)
+            if not incl_private and photo.get_privacy():
+                continue
+            break
+        if photo is None:
+            return
         mimetype = photo.get_mime_type()
         if mimetype:
             full_path = media_path_full(self.database, photo.get_path())
@@ -153,6 +169,8 @@ class WebRelTreeOptions(MenuReportOptions):
         self.__target.set_help( _('The destination directory for the web files'))
         self.__target.set_directory_entry(True)
         menu.add_option(category_name, 'target', self.__target)
+
+        add_private_data_option(menu, category_name)
 
         self.__person_id = PersonOption(_('Filter Person'))
         self.__person_id.set_help(_('The center person for the filter'))
