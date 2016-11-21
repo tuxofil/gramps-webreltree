@@ -12,5 +12,5 @@ plg.authors_email = ["tuxofil@gmail.com"]
 plg.category =  CATEGORY_WEB
 plg.reportclass = 'WebRelTreeReport'
 plg.optionclass = 'WebRelTreeOptions'
-plg.report_modes = [REPORT_MODE_GUI]
+plg.report_modes = [REPORT_MODE_GUI, REPORT_MODE_CLI]
 plg.require_active = True
