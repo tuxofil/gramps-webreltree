@@ -106,16 +106,6 @@ class WebRelTreeReport(Report):
             dst_path = os.path.join(
                 self.thumb_dirname, photo_handle +
                 (('%d,%d-%d,%d.png' % region) if region else '.png'))
-            if person.gramps_id == 'I0001':
-                sys.stderr.write(
-                    '%r\n' % {
-                        'region': region,
-                        'photo_handle': photo_handle,
-                        'photo': photo,
-                        'full_path': full_path,
-                        'src_path': src_path,
-                        'dst_path': dst_path,
-                    })
             shutil.copyfile(src_path, dst_path)
             return os.path.join('thumbs', os.path.basename(dst_path))
 
