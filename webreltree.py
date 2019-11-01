@@ -18,7 +18,7 @@ from gramps.gen.plug.report.stdoptions import add_private_data_option
 from gramps.gen.plug.menu import (StringOption, PersonOption, DestinationOption)
 from gramps.gen.lib import Person
 from gramps.gen.utils.file import media_path_full
-from gramps.gui.thumbnails import get_thumbnail_path
+from gramps.gen.utils.thumbnails import get_thumbnail_path
 
 
 #------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class WebRelTreeReport(Report):
         for media_ref in media_refs:
             region = media_ref.get_rectangle()
             photo_handle = media_ref.get_reference_handle()
-            photo = self.database.get_object_from_handle(photo_handle)
+            photo = self.database.get_media_from_handle(photo_handle)
             if not incl_private and photo.get_privacy():
                 continue
             break
