@@ -20,7 +20,6 @@ import os
 import shutil
 
 from gramps.gen.const import GRAMPS_LOCALE as glocale
-_ = glocale.translation.sgettext
 from gramps.gen.config import config
 from gramps.gen.plug.report import Report
 from gramps.gen.plug.report import MenuReportOptions
@@ -30,6 +29,7 @@ from gramps.gen.lib import Person
 from gramps.gen.utils.file import media_path_full
 from gramps.gen.utils.thumbnails import get_thumbnail_path
 
+_ = glocale.translation.sgettext
 
 # ------------------------------------------------------------------------
 # WebRelTreeReport
